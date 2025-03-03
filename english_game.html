@@ -3,15 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Английский Mini App</title>
-  <!-- Подключаем Telegram Web Apps JS SDK -->
+ 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Общие стили */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: Arial, sans-serif;
       background: linear-gradient(to bottom right, #f5f7fa, #c3cfe2);
@@ -29,110 +24,130 @@
       max-width: 500px;
       width: 100%;
     }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-    .question {
-      font-size: 18px;
-      margin-bottom: 15px;
-    }
-    .input-group {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      align-items: center;
-    }
+    h1 { font-size: 24px; margin-bottom: 15px; text-align: center; }
+    .question { font-size: 18px; margin-bottom: 15px; min-height: 60px; }
+    .input-group { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
     input {
-      font-size: 16px;
-      padding: 8px;
-      flex: 1;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      font-size: 16px; padding: 8px; flex: 1;
+      border: 1px solid #ccc; border-radius: 4px;
     }
+    .buttons { display: flex; justify-content: center; gap: 10px; }
     button {
-      font-size: 16px;
-      padding: 8px 16px;
-      border: none;
-      background-color: #007BFF;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
+      font-size: 16px; padding: 8px 16px; border: none;
+      background-color: #007BFF; color: #fff; border-radius: 4px;
+      cursor: pointer; transition: background-color 0.2s ease;
     }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .result-message {
-      font-size: 16px;
-      margin-top: 10px;
-      text-align: center;
-    }
-    .telegram-note {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #666;
-      text-align: center;
-    }
+    button:hover { background-color: #0056b3; }
+    .result-message { font-size: 16px; margin-top: 10px; text-align: center; min-height: 24px; }
+    .telegram-note { margin-top: 15px; font-size: 14px; color: #666; text-align: center; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Заполни пропуск</h1>
-    <!-- В реальном приложении можно подгружать случайное задание -->
-    <div class="question">
-      She ___ (to go) to school every day.
-    </div>
+    <div id="question" class="question"></div>
     <div class="input-group">
       <input type="text" id="answer" placeholder="Ваш ответ">
-      <button onclick="sendAnswer()">Отправить</button>
+    </div>
+    <div class="buttons">
+      
+      <button type="button" id="checkBtn">Узнать ответ</button>
+      <button type="button" id="nextBtn">Далее</button>
     </div>
     <div id="result" class="result-message"></div>
-
     <div class="telegram-note">
-      Если вы открыли страницу не в Telegram, кнопка не отправит данные боту.
+      Если вы открыли страницу не в Telegram, отправка данных боту не сработает.
     </div>
   </div>
 
   <script>
-    function sendAnswer() {
-      let answerField = document.getElementById('answer');
-      let resultDiv = document.getElementById('result');
+    // Массив заданий 
+    const tasks = [
+      { question: "She ___ (to go) to school every day.", correct: "goes" },
+      { question: "They ___ (to eat) dinner at 7 PM yesterday.", correct: "ate" },
+      { question: "I ___ (to be) very happy last week.", correct: "was" },
+      { question: "He ___ (to work) in the garden right now.", correct: "is working" },
+      { question: "We ___ (to see) that movie already.", correct: "have seen" }
+    ];
 
-      let answer = answerField.value.trim().toLowerCase();
+    let currentIndex = 0;
+    let score = 0;
 
-      // Простейшая проверка ответа на стороне клиента (опционально)
-      let correctAnswer = 'goes';
-      let score = (answer === correctAnswer) ? 10 : 0;
+    const questionEl = document.getElementById('question');
+    const answerEl = document.getElementById('answer');
+    const resultEl = document.getElementById('result');
+    const checkBtn = document.getElementById('checkBtn');
+    const nextBtn = document.getElementById('nextBtn');
 
-      // Формируем объект с данными, который будет отправлен боту
-      const resultData = {
-        game: 'english',
-        score: score,
-        userAnswer: answer,
-        correctAnswer: correctAnswer
-      };
+    function loadQuestion() {
+      console.log("loadQuestion, currentIndex =", currentIndex);
+      resultEl.textContent = '';
+      answerEl.value = '';
 
-      // Попробуем вызвать Telegram.WebApp.sendData
-      if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
-        // Отправляем данные в формате JSON обратно в Telegram
-        Telegram.WebApp.sendData(JSON.stringify(resultData));
-
-        // Для наглядности отображаем результат на странице
-        if (score > 0) {
-          resultDiv.textContent = 'Правильно! Вы заработали 10 очков.';
-          resultDiv.style.color = 'green';
-        } else {
-          resultDiv.textContent = `Неправильно. Правильный ответ: ${correctAnswer}.`;
-          resultDiv.style.color = 'red';
-        }
+      if (currentIndex < tasks.length) {
+        questionEl.textContent = tasks[currentIndex].question;
       } else {
-        // Если не в Telegram, просто покажем результат локально
-        resultDiv.textContent = 'Страница не открыта в Telegram, данные не отправлены.';
-        resultDiv.style.color = 'orange';
+        console.log("Все задания выполнены, вызывается endGame");
+        endGame();
       }
     }
+
+    function checkAnswer() {
+      if (currentIndex >= tasks.length) return;
+
+      const userAnswer = answerEl.value.trim().toLowerCase();
+      const correctAnswer = tasks[currentIndex].correct.toLowerCase();
+
+      if (!userAnswer) {
+        resultEl.textContent = 'Введите ответ!';
+        resultEl.style.color = 'orange';
+        return;
+      }
+
+      if (userAnswer === correctAnswer) {
+        resultEl.textContent = 'Правильно! +10 очков.';
+        resultEl.style.color = 'green';
+        score += 10;
+      } else {
+        resultEl.textContent = `Неправильно. Правильный ответ: ${tasks[currentIndex].correct}.`;
+        resultEl.style.color = 'red';
+      }
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      console.log("nextQuestion, new currentIndex =", currentIndex);
+      if (currentIndex < tasks.length) {
+        loadQuestion();
+      } else {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      questionEl.textContent = "Все задания выполнены!";
+      answerEl.style.display = 'none';
+      checkBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+
+      resultEl.textContent = `Вы набрали ${score} очков!`;
+      resultEl.style.color = 'blue';
+
+      
+      const resultData = { game: 'english', score: score };
+
+     
+      if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+        Telegram.WebApp.sendData(JSON.stringify(resultData));
+      }
+    }
+
+     
+    checkBtn.addEventListener('click', checkAnswer);
+    nextBtn.addEventListener('click', nextQuestion);
+
+    
+    loadQuestion();
   </script>
 </body>
 </html>
