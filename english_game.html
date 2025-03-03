@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Английский Mini App</title>
+  <!-- Подключаем Telegram Web Apps JS SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    /* Общие стили */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #f5f7fa, #c3cfe2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+    }
+    .container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px 25px;
+      max-width: 500px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .question {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    input {
+      font-size: 16px;
+      padding: 8px;
+      flex: 1;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      font-size: 16px;
+      padding: 8px 16px;
+      border: none;
+      background-color: #007BFF;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result-message {
+      font-size: 16px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .telegram-note {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Заполни пропуск</h1>
+    <!-- В реальном приложении можно подгружать случайное задание -->
+    <div class="question">
+      She ___ (to go) to school every day.
+    </div>
+    <div class="input-group">
+      <input type="text" id="answer" placeholder="Ваш ответ">
+      <button onclick="sendAnswer()">Отправить</button>
+    </div>
+    <div id="result" class="result-message"></div>
+
+    <div class="telegram-note">
+      Если вы открыли страницу не в Telegram, кнопка не отправит данные боту.
+    </div>
+  </div>
+
+  <script>
+    function sendAnswer() {
+      let answerField = document.getElementById('answer');
+      let resultDiv = document.getElementById('result');
+
+      let answer = answerField.value.trim().toLowerCase();
+
+      // Простейшая проверка ответа на стороне клиента (опционально)
+      let correctAnswer = 'goes';
+      let score = (answer === correctAnswer) ? 10 : 0;
+
+      // Формируем объект с данными, который будет отправлен боту
+      const resultData = {
+        game: 'english',
+        score: score,
+        userAnswer: answer,
+        correctAnswer: correctAnswer
+      };
+
+      // Попробуем вызвать Telegram.WebApp.sendData
+      if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+        // Отправляем данные в формате JSON обратно в Telegram
+        Telegram.WebApp.sendData(JSON.stringify(resultData));
+
+        // Для наглядности отображаем результат на странице
+        if (score > 0) {
+          resultDiv.textContent = 'Правильно! Вы заработали 10 очков.';
+          resultDiv.style.color = 'green';
+        } else {
+          resultDiv.textContent = `Неправильно. Правильный ответ: ${correctAnswer}.`;
+          resultDiv.style.color = 'red';
+        }
+      } else {
+        // Если не в Telegram, просто покажем результат локально
+        resultDiv.textContent = 'Страница не открыта в Telegram, данные не отправлены.';
+        resultDiv.style.color = 'orange';
+      }
+    }
+  </script>
+</body>
+</html>
