@@ -9,7 +9,8 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #eef1f5;
+      /* Красивый градиентный фон для всей страницы */
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -19,14 +20,16 @@
     .score-board {
       font-size: 20px;
       margin-bottom: 10px;
-      color: #333;
+      color: #fff;
     }
+    /* Canvas имеет фиксированное внутреннее разрешение,
+       но его CSS размеры устанавливаются динамически для адаптивности */
     #gameCanvas {
-      background: #fff;
       border: 2px solid #ccc;
       border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    /* Стили для модального окна */
+    /* Стили для модального окна остаются без изменений */
     .modal-background {
       position: fixed;
       top: 0;
@@ -90,6 +93,7 @@
 </head>
 <body>
   <div class="score-board" id="scoreBoard">Score: 0</div>
+  <!-- Внутреннее разрешение canvas 800x500, а CSS размеры задаются динамически -->
   <canvas id="gameCanvas" width="800" height="500"></canvas>
 
   <!-- Модальное окно для вопросов -->
@@ -107,9 +111,31 @@
   </div>
 
   <script>
-    // Элементы страницы
+    // Инициализация canvas с фиксированным внутренним разрешением
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const internalWidth = 800, internalHeight = 500;
+    canvas.width = internalWidth;
+    canvas.height = internalHeight;
+
+    // Функция для адаптивного масштабирования canvas
+    function resizeCanvas() {
+      const availableWidth = window.innerWidth - 40;  // немного отступа
+      const availableHeight = window.innerHeight - 150; // отступ для score board и прочего
+      const aspectRatio = internalWidth / internalHeight;
+      let newWidth = availableWidth;
+      let newHeight = newWidth / aspectRatio;
+      if (newHeight > availableHeight) {
+        newHeight = availableHeight;
+        newWidth = newHeight * aspectRatio;
+      }
+      canvas.style.width = newWidth + 'px';
+      canvas.style.height = newHeight + 'px';
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Элементы страницы
     const scoreBoard = document.getElementById('scoreBoard');
     const modalBg = document.getElementById('modalBg');
     const questionText = document.getElementById('questionText');
@@ -119,26 +145,22 @@
     const closeBtn = document.getElementById('closeBtn');
 
     // Настройки игры
-    const cellSize = 20;         // Размер одной клетки (используется для змейки)
-    let gameSpeed = 150;         // Интервал движения змейки в мс
+    const cellSize = 20; // размер клетки (используется для логики змейки)
+    let gameSpeed = 150; // интервал обновления игры в мс
 
-    // Инициализация змейки (координаты задаются в "клетках")
+    // Инициализация змейки (координаты в "клетках")
     let snake = [
       {x: 5, y: 5},
       {x: 4, y: 5},
       {x: 3, y: 5}
     ];
-    let direction = {x: 1, y: 0};     // Начальное направление вправо
+    let direction = {x: 1, y: 0}; // начальное направление — вправо
     let nextDirection = direction;
-
-    // Счет игры
     let score = 0;
-
-    // Флаги управления игрой
     let gamePaused = false;
     let gameOver = false;
 
-    // Задания (координаты заданы в процентах от размера canvas, потом переводим в "клетки")
+    // Задания: координаты заданы в процентах от размера canvas, затем переводятся в "клетки"
     const tasksData = [
       {question: "She ___ (to go) to school every day.", correct: "goes", percX: 20, percY: 30},
       {question: "They ___ (to eat) dinner at 7 PM yesterday.", correct: "ate", percX: 70, percY: 50},
@@ -146,24 +168,23 @@
       {question: "He ___ (to work) in the garden right now.", correct: "is working", percX: 85, percY: 20},
       {question: "We ___ (to see) that movie already.", correct: "have seen", percX: 10, percY: 60}
     ];
-    // Переводим проценты в координаты клеток
-    const tasks = tasksData.map(task => {
-      return {
-        question: task.question,
-        correct: task.correct,
-        x: Math.floor((task.percX / 100) * (canvas.width / cellSize)),
-        y: Math.floor((task.percY / 100) * (canvas.height / cellSize)),
-        done: false
-      };
-    });
+    const tasks = tasksData.map(task => ({
+      question: task.question,
+      correct: task.correct,
+      x: Math.floor((task.percX / 100) * (internalWidth / cellSize)),
+      y: Math.floor((task.percY / 100) * (internalHeight / cellSize)),
+      done: false
+    }));
+    let currentTaskIndex = null;
 
-    let currentTaskIndex = null; // Индекс текущей задачи, активной в модальном окне
-
-    // Функция отрисовки поля, заданий и змейки
+    // Функция отрисовки игрового поля, заданий и змейки
     function drawGame() {
-      // Очистка canvas
-      ctx.fillStyle = '#eef1f5';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Рисуем красивый градиентный фон на canvas
+      let gradient = ctx.createLinearGradient(0, 0, internalWidth, internalHeight);
+      gradient.addColorStop(0, '#89f7fe');
+      gradient.addColorStop(1, '#66a6ff');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, internalWidth, internalHeight);
 
       // Рисуем задания (красные кружки)
       tasks.forEach(task => {
@@ -210,7 +231,7 @@
     // Проверка столкновения головы змейки с заданием
     function checkTaskCollision(newHead) {
       for (let i = 0; i < tasks.length; i++) {
-        let task = tasks[i];
+        const task = tasks[i];
         if (!task.done && newHead.x === task.x && newHead.y === task.y) {
           return i;
         }
@@ -218,22 +239,22 @@
       return -1;
     }
 
-    // Основной игровой цикл (вызывается через setInterval)
+    // Основной игровой цикл
     function gameLoop() {
       if (gamePaused || gameOver) return;
 
-      // Обновляем направление движения
+      // Обновляем направление
       direction = nextDirection;
 
       // Вычисляем новую голову змейки
       const head = snake[0];
       const newHead = {x: head.x + direction.x, y: head.y + direction.y};
 
-      // Обработка выхода за границы: реализована обертка по горизонтали и вертикали
-      newHead.x = (newHead.x + canvas.width / cellSize) % (canvas.width / cellSize);
-      newHead.y = (newHead.y + canvas.height / cellSize) % (canvas.height / cellSize);
+      // Обработка выхода за границы: обёртка по горизонтали и вертикали
+      newHead.x = (newHead.x + (internalWidth / cellSize)) % (internalWidth / cellSize);
+      newHead.y = (newHead.y + (internalHeight / cellSize)) % (internalHeight / cellSize);
 
-      // Проверка на столкновение с самим собой (если голова пересекается с любым сегментом)
+      // Проверка столкновения с самим собой
       for (let i = 0; i < snake.length; i++) {
         if (snake[i].x === newHead.x && snake[i].y === newHead.y) {
           endGame();
@@ -241,29 +262,23 @@
         }
       }
 
-      // Добавляем новую голову в начало массива
       snake.unshift(newHead);
-
-      // Проверяем, столкнулась ли голова с заданием
       const taskIndex = checkTaskCollision(newHead);
       if (taskIndex !== -1) {
-        // При столкновении – останавливаем игру и показываем модальное окно с вопросом
+        // Если столкнулись с заданием — останавливаем игру и показываем вопрос
         gamePaused = true;
         currentTaskIndex = taskIndex;
         showQuestion(tasks[taskIndex].question);
-        // В этот ход не удаляем хвост – змейка вырастает при успешном выполнении
       } else {
-        // Если столкновения не было, удаляем последний элемент (перемещение змейки)
+        // Если столкновения нет, убираем последний сегмент змейки (движение)
         snake.pop();
       }
 
       drawGame();
     }
+    const gameInterval = setInterval(gameLoop, gameSpeed);
 
-    // Запускаем игровой цикл
-    let gameInterval = setInterval(gameLoop, gameSpeed);
-
-    // Функции для модального окна
+    // Функции для работы с модальным окном
     function showQuestion(question) {
       questionText.textContent = question;
       userAnswer.value = '';
@@ -271,7 +286,6 @@
       resultMessage.style.color = '#333';
       modalBg.style.display = 'flex';
     }
-
     function closeModal() {
       modalBg.style.display = 'none';
       currentTaskIndex = null;
@@ -280,20 +294,16 @@
         clearInterval(gameInterval);
       }
     }
-
-    // Обработка ответа пользователя
     function checkAnswer() {
       if (currentTaskIndex === null) return;
       const task = tasks[currentTaskIndex];
       const userAns = userAnswer.value.trim().toLowerCase();
       const correctAns = task.correct.toLowerCase();
-
       if (!userAns) {
         resultMessage.textContent = 'Введите ответ!';
         resultMessage.style.color = 'orange';
         return;
       }
-
       if (userAns === correctAns) {
         resultMessage.textContent = 'Правильно! +1 балл.';
         resultMessage.style.color = 'green';
@@ -302,7 +312,6 @@
         task.done = true;
         setTimeout(() => {
           closeModal();
-          // Если все задания выполнены, завершаем игру
           if (tasks.every(t => t.done)) {
             endGame();
           }
@@ -312,7 +321,6 @@
         resultMessage.style.color = 'red';
       }
     }
-
     checkBtn.addEventListener('click', checkAnswer);
     closeBtn.addEventListener('click', closeModal);
 
