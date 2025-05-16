@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>English Games</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Общие стили */
+        body {
+          margin: 0;
+          font-family: Arial, sans-serif;
+          background: linear-gradient(135deg, #89f7fe, #66a6ff);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          overflow: hidden;
+        }
+
+        /* Стили меню выбора */
+        .menu-container {
+          text-align: center;
+          padding: 20px;
+          max-width: 500px;
+        }
+
+        .game-title {
+          font-size: 24px;
+          color: #fff;
+          margin-bottom: 30px;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .game-button {
+          background: #007bff;
+          color: white;
+          border: none;
+          padding: 15px 30px;
+          margin: 10px;
+          border-radius: 25px;
+          font-size: 18px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          width: 80%;
+          max-width: 300px;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .exit-button {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          background: #dc3545;
+          color: white;
+          padding: 10px 20px;
+          border-radius: 20px;
+          cursor: pointer;
+          z-index: 1000;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .game-button:hover {
+          background: #0056b3;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Стили игры (изначально скрыты) */
+        .game-container {
+          display: none;
+          width: 100%;
+          align-items: center;
+          flex-direction: column;
+        }
+
+        .score-board {
+          font-size: 20px;
+          margin-bottom: 10px;
+          color: #fff;
+        }
+
+        #gameCanvas {
+          border: 2px solid #ccc;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* Модальное окно */
+        .modal-background {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0,0,0,0.5);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+
+        .modal-content {
+          background: #fff;
+          border-radius: 8px;
+          width: 400px;
+          max-width: 90%;
+          padding: 20px;
+          box-shadow: 0 0 10px rgba(0,0,0,0.2);
+          text-align: center;
+        }
+
+        .modal-content h2 {
+          margin-bottom: 15px;
+        }
+
+        .modal-content .question-text {
+          font-size: 16px;
+          margin-bottom: 15px;
+          min-height: 50px;
+        }
+
+        .modal-content input[type="text"] {
+          width: 80%;
+          padding: 8px;
+          font-size: 14px;
+          margin-bottom: 10px;
+        }
+
+        .modal-content .buttons {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          margin-top: 10px;
+        }
+
+        .modal-content button {
+          cursor: pointer;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          background: #007bff;
+          color: #fff;
+          font-size: 14px;
+          transition: background-color 0.2s;
+        }
+
+        .modal-content button:hover {
+          background: #0056b3;
+        }
+
+        .modal-content .result-message {
+          margin-top: 10px;
+          min-height: 20px;
+          font-size: 14px;
+        }
+        .modal-verbs-game {
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .question-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .drop-zone {
+            display: inline-block;
+            width: 80px;
+            height: 30px;
+            border: 2px dashed #007bff;
+            border-radius: 5px;
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+
+        .answers-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .answer-option {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: move;
+            user-select: none;
+        }
+
+        .correct {
+            background: #28a745 !important;
+        }
+
+        .wrong {
+            background: #dc3545 !important;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+            min-height: 20px;
+        }
+        .score-board {
+    display: flex;
+    gap: 15px;
+}
+    </style>
+</head>
+<body>
+<!-- Меню выбора игры -->
+<div class="menu-container" id="menuContainer">
+    <h1 class="game-title">Выберите задание</h1>
+    <button class="game-button" onclick="startGame('snake')">🐍 Грамматическая Змейка</button>
+    <button class="game-button" onclick="startGame('modal')">🃏 Модальные глаголы</button>
+</div>
+
+<!-- Добавляем кнопку выхода в игровой контейнер -->
+<div class="game-container" id="gameContainer">
+    <div class="score-board">
+        <span id="scoreBoard">Score: 0</span> |
+        <span id="bestScore">Best: 0</span>
+    </div>
+    <div class="modal-verbs-game" id="modalVerbsGame"></div>
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <div class="exit-button" onclick="showMenu()">Выйти в меню</div>
+</div>
+
+
+<!-- Модальное окно для вопросов -->
+<div class="modal-background" id="modalBg">
+    <div class="modal-content">
+        <h2>Answer the question</h2>
+        <div class="question-text" id="questionText"></div>
+        <input type="text" id="userAnswer" placeholder="Ваш ответ">
+        <div class="result-message" id="resultMessage"></div>
+        <div class="buttons">
+            <button id="checkBtn">Check</button>
+            <button id="closeBtn">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Данные для игры с модальными глаголами
+    const modalVerbsData = [
+        {
+            question: "______ you see anything in the dark room?",
+            correct: "can",
+            options: ["can", "may"]
+        },
+        {
+            question: "Kate ______ speak English.",
+            correct: "can",
+            options: ["can", "may"]
+        },
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = parseInt(sessionStorage.getItem('currentScore')) || 0; // Изменено: получаем из sessionStorage
+    let bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
+
+    // Добавлено: функция обновления отображения счета
+    function updateScoreDisplay() {
+        document.getElementById('scoreBoard').textContent = `Score: ${score}`;
+        document.getElementById('bestScore').textContent = `Best: ${bestScore}`;
+    }
+
+    // Добавлено: инициализация отображения при загрузке
+    updateScoreDisplay();
+
+    // Обновление лучшего результата
+    function updateBestScore() {
+        if(score > bestScore) {
+            bestScore = score;
+            localStorage.setItem('bestScore', bestScore);
+            document.getElementById('bestScore').textContent = `Best: ${bestScore}`;
+        }
+    }
+
+    function initializeModalGame() {
+            const gameContainer = document.getElementById('modalVerbsGame');
+            gameContainer.innerHTML = '';
+
+            if(currentQuestionIndex >= modalVerbsData.length) {
+                endModalGame();
+                return;
+            }
+
+            const questionData = modalVerbsData[currentQuestionIndex];
+            const questionElement = document.createElement('div');
+            questionElement.className = 'question-container';
+
+            // Создаем вопрос с пропуском
+            const questionParts = questionData.question.split('______');
+            questionElement.innerHTML = `
+                <div class="question-text">
+                    ${questionParts[0]}
+                    <div class="drop-zone"
+                        ondrop="dropHandler(event)"
+                        ondragover="allowDrop(event)"
+                        data-correct="${questionData.correct.toLowerCase()}">
+                    </div>
+                    ${questionParts[1]}
+                </div>
+                <div class="answers-container">
+                    ${questionData.options.map(opt => `
+                        <div class="answer-option"
+                            draggable="true"
+                            ondragstart="dragHandler(event)"
+                            data-value="${opt.toLowerCase()}">
+                            ${opt}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="feedback" id="feedback"></div>
+            `;
+
+            gameContainer.appendChild(questionElement);
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function dragHandler(ev) {
+            const value = ev.target.getAttribute('data-value');
+            ev.dataTransfer.setData("text", value);
+        }
+
+        function dropHandler(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const dropZone = ev.target.closest('.drop-zone');
+
+            if (!dropZone || dropZone.children.length > 0) return;
+
+            const correctAnswer = dropZone.getAttribute('data-correct');
+            const userAnswer = data.toLowerCase();
+
+            // Создаем элемент для отображения ответа
+            const answerDisplay = document.createElement('div');
+            answerDisplay.textContent = data;
+            answerDisplay.className = `answer-option ${userAnswer === correctAnswer ? 'correct' : 'wrong'}`;
+
+            dropZone.appendChild(answerDisplay);
+            dropZone.style.borderStyle = 'solid';
+
+            // Проверяем ответ
+            if(userAnswer === correctAnswer) {
+                score++;
+                document.getElementById('scoreBoard').textContent = `Score: ${score}`;
+                document.getElementById('feedback').innerHTML = '✅ Правильно! +1 балл';
+                document.getElementById('feedback').style.color = '#28a745';
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    initializeModalGame();
+                }, 1500);
+            } else {
+                document.getElementById('feedback').innerHTML = '❌ Неправильно! Попробуйте ещё';
+                document.getElementById('feedback').style.color = '#dc3545';
+
+                // Автоматическая очистка через 1 секунду
+                setTimeout(() => {
+                    dropZone.innerHTML = '';
+                    dropZone.style.borderStyle = 'dashed';
+                }, 1000);
+            }
+        }
+
+        function endModalGame() {
+            updateBestScore();
+            sessionStorage.removeItem('currentScore'); // Добавлено: очистка sessionStorage
+            const resultData = { game: 'modal', score: score };
+            if(typeof Telegram !== 'undefined' && Telegram.WebApp) {
+                Telegram.WebApp.sendData(JSON.stringify(resultData));
+            }
+
+            document.getElementById('modalVerbsGame').innerHTML = `
+                <div class="question-container">
+                    <h2>Игра завершена!</h2>
+                    <p>Вы набрали ${score} баллов из ${modalVerbsData.length}</p>
+                </div>
+            `;
+        }
+
+    // Обновляем функцию startGame
+    function startGame(gameType) {
+        currentGame = gameType;
+        menuContainer.style.display = 'none';
+        gameContainer.style.display = 'flex';
+
+        if(gameType === 'snake') {
+            initializeSnakeGame();
+        } else if(gameType === 'modal') {
+            updateScoreDisplay();
+            initializeModalGame();
+        }
+    }
+
+    // Обновляем функцию showMenu
+    function showMenu() {
+        if(confirm('Вы уверены, что хотите выйти в меню?')) {
+            menuContainer.style.display = 'block';
+            gameContainer.style.display = 'none';
+            if(currentGame === 'snake' && snakeGameInterval) {
+                clearInterval(snakeGameInterval);
+            }
+            // Сбрасываем состояние игр
+            currentQuestionIndex = 0;
+        }
+    }
+
+
+
+    // Управление меню и игрой
+    let currentGame = null;
+    const menuContainer = document.getElementById('menuContainer');
+    const gameContainer = document.getElementById('gameContainer');
+    let snakeGameInterval;
+
+    function startGame(gameType) {
+      currentGame = gameType;
+      menuContainer.style.display = 'none';
+      gameContainer.style.display = 'flex';
+
+      if(gameType === 'snake') {
+        initializeSnakeGame();
+    } else if(gameType === 'modal') {
+        initializeModalGame();
+    } else {
+        alert('Эта игра в разработке!');
+        showMenu();
+    }
+    }
+
+// Модифицируем функцию closeModal
+    function closeModal() {
+      modalBg.style.display = 'none';
+      currentTaskIndex = null;
+      gamePaused = false; // Возобновляем игру при закрытии модального окна
+    }
+    // Код змейки
+    function initializeSnakeGame() {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const internalWidth = 800, internalHeight = 500;
+      canvas.width = internalWidth;
+      canvas.height = internalHeight;
+
+      // Функция для адаптивного масштабирования canvas
+      function resizeCanvas() {
+        const availableWidth = window.innerWidth - 40;
+        const availableHeight = window.innerHeight - 150;
+        const aspectRatio = internalWidth / internalHeight;
+        let newWidth = availableWidth;
+        let newHeight = newWidth / aspectRatio;
+        if (newHeight > availableHeight) {
+          newHeight = availableHeight;
+          newWidth = newHeight * aspectRatio;
+        }
+        canvas.style.width = newWidth + 'px';
+        canvas.style.height = newHeight + 'px';
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // Элементы страницы
+      const scoreBoard = document.getElementById('scoreBoard');
+      const modalBg = document.getElementById('modalBg');
+      const questionText = document.getElementById('questionText');
+      const userAnswer = document.getElementById('userAnswer');
+      const resultMessage = document.getElementById('resultMessage');
+      const checkBtn = document.getElementById('checkBtn');
+      const closeBtn = document.getElementById('closeBtn');
+
+      // Настройки игры
+      const cellSize = 20;
+      let gameSpeed = 150;
+      let snake = [
+        {x: 5, y: 5},
+        {x: 4, y: 5},
+        {x: 3, y: 5}
+      ];
+      let direction = {x: 1, y: 0};
+      let nextDirection = direction;
+      let gamePaused = false;
+      let gameOver = false;
+      updateScoreDisplay();
+      // Задания
+      const tasksData = [
+        {question: "She ___ (to go) to school every day.", correct: "goes", percX: 20, percY: 30},
+        {question: "They ___ (to eat) dinner at 7 PM yesterday.", correct: "ate", percX: 70, percY: 50},
+        {question: "I ___ (to be) very happy last week.", correct: "was", percX: 40, percY: 80},
+        {question: "He ___ (to work) in the garden right now.", correct: "is working", percX: 85, percY: 20},
+        {question: "We ___ (to see) that movie already.", correct: "have seen", percX: 10, percY: 60}
+      ];
+      const tasks = tasksData.map(task => ({
+        question: task.question,
+        correct: task.correct,
+        x: Math.floor((task.percX / 100) * (internalWidth / cellSize)),
+        y: Math.floor((task.percY / 100) * (internalHeight / cellSize)),
+        done: false
+      }));
+      let currentTaskIndex = null;
+
+      // Функция отрисовки
+      function drawGame() {
+        let gradient = ctx.createLinearGradient(0, 0, internalWidth, internalHeight);
+        gradient.addColorStop(0, '#89f7fe');
+        gradient.addColorStop(1, '#66a6ff');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, internalWidth, internalHeight);
+
+        tasks.forEach(task => {
+          if (!task.done) {
+            ctx.fillStyle = 'red';
+            const centerX = task.x * cellSize + cellSize / 2;
+            const centerY = task.y * cellSize + cellSize / 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, cellSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+
+        snake.forEach((segment, index) => {
+          ctx.fillStyle = index === 0 ? 'green' : 'lime';
+          ctx.fillRect(segment.x * cellSize, segment.y * cellSize, cellSize, cellSize);
+        });
+      }
+
+      // Обработка управления
+      document.addEventListener('keydown', (e) => {
+        if (gamePaused) return;
+        switch (e.key) {
+          case "ArrowUp":
+            if (direction.y === 1) break;
+            nextDirection = {x: 0, y: -1};
+            break;
+          case "ArrowDown":
+            if (direction.y === -1) break;
+            nextDirection = {x: 0, y: 1};
+            break;
+          case "ArrowLeft":
+            if (direction.x === 1) break;
+            nextDirection = {x: -1, y: 0};
+            break;
+          case "ArrowRight":
+            if (direction.x === -1) break;
+            nextDirection = {x: 1, y: 0};
+            break;
+        }
+      });
+
+      // Игровая логика
+      function checkTaskCollision(newHead) {
+        for (let i = 0; i < tasks.length; i++) {
+          const task = tasks[i];
+          if (!task.done && newHead.x === task.x && newHead.y === task.y) {
+            return i;
+          }
+        }
+        return -1;
+      }
+
+      function gameLoop() {
+        if (gamePaused || gameOver) return;
+        direction = nextDirection;
+        const head = snake[0];
+        const newHead = {x: head.x + direction.x, y: head.y + direction.y};
+
+        newHead.x = (newHead.x + (internalWidth / cellSize)) % (internalWidth / cellSize);
+        newHead.y = (newHead.y + (internalHeight / cellSize)) % (internalHeight / cellSize);
+
+        for (let i = 0; i < snake.length; i++) {
+          if (snake[i].x === newHead.x && snake[i].y === newHead.y) {
+            endGame();
+            return;
+          }
+        }
+
+        snake.unshift(newHead);
+        const taskIndex = checkTaskCollision(newHead);
+        if (taskIndex !== -1) {
+          gamePaused = true;
+          currentTaskIndex = taskIndex;
+          showQuestion(tasks[taskIndex].question);
+        } else {
+          snake.pop();
+        }
+        drawGame();
+      }
+
+      // Модальное окно
+      function showQuestion(question) {
+        questionText.textContent = question;
+        userAnswer.value = '';
+        resultMessage.textContent = '';
+        resultMessage.style.color = '#333';
+        modalBg.style.display = 'flex';
+      }
+
+      function closeModal() {
+        modalBg.style.display = 'none';
+        currentTaskIndex = null;
+        gamePaused = false;
+        if (gameOver) {
+          clearInterval(snakeGameInterval);
+        }
+      }
+
+      function checkAnswer() {
+        if (currentTaskIndex === null) return;
+        const task = tasks[currentTaskIndex];
+        const userAns = userAnswer.value.trim().toLowerCase();
+        const correctAns = task.correct.toLowerCase();
+        if (!userAns) {
+          resultMessage.textContent = 'Введите ответ!';
+          resultMessage.style.color = 'orange';
+          return;
+        }
+        if (userAns === correctAns) {
+          resultMessage.textContent = 'Правильно! +1 балл.';
+          resultMessage.style.color = 'green';
+          score++;
+          sessionStorage.setItem('currentScore', score); // Добавлено
+          scoreBoard.textContent = 'Score: ' + score;
+          task.done = true;
+          setTimeout(() => {
+            closeModal();
+            if (tasks.every(t => t.done)) {
+              endGame();
+            }
+          }, 1000);
+        } else {
+          resultMessage.textContent = 'Неправильно. Правильный ответ: ' + task.correct;
+          resultMessage.style.color = 'red';
+        }
+      }
+
+      checkBtn.addEventListener('click', checkAnswer);
+      closeBtn.addEventListener('click', () => {
+        closeModal();
+      });
+
+      // Завершение игры
+    function endGame() {
+    updateBestScore();
+     sessionStorage.removeItem('currentScore'); // Добавлено: очистка
+      gameOver = true;
+      gamePaused = true;
+      clearInterval(snakeGameInterval);
+      questionText.textContent = "Все задания выполнены или игра окончена!";
+      userAnswer.style.display = 'none';
+      checkBtn.style.display = 'none';
+      resultMessage.textContent = 'Вы набрали ' + score + ' баллов!';
+      resultMessage.style.color = 'blue';
+      modalBg.style.display = 'flex';
+
+      const resultData = { game: currentGame, score: score };
+      if(typeof Telegram !== 'undefined' && Telegram.WebApp) {
+        Telegram.WebApp.sendData(JSON.stringify(resultData));
+      }
+    }
+
+      // Запуск игры
+      snakeGameInterval = setInterval(gameLoop, gameSpeed);
+    }
+    function updateScoreDisplay() {
+        document.getElementById('scoreBoard').textContent = `Score: ${score}`;
+        document.getElementById('bestScore').textContent = `Best: ${bestScore}`;
+    }
+</script>
+</body>
+</html>
