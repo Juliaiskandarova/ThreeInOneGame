@@ -1,668 +1,407 @@
+<!-- english_game.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>English Games</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        /* Общие стили */
-        body {
-          margin: 0;
-          font-family: Arial, sans-serif;
-          background: linear-gradient(135deg, #89f7fe, #66a6ff);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          overflow: hidden;
-        }
-
-        /* Стили меню выбора */
-        .menu-container {
-          text-align: center;
-          padding: 20px;
-          max-width: 500px;
-        }
-
-        .game-title {
-          font-size: 24px;
-          color: #fff;
-          margin-bottom: 30px;
-          text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .game-button {
-          background: #007bff;
-          color: white;
-          border: none;
-          padding: 15px 30px;
-          margin: 10px;
-          border-radius: 25px;
-          font-size: 18px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          width: 80%;
-          max-width: 300px;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .exit-button {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          background: #dc3545;
-          color: white;
-          padding: 10px 20px;
-          border-radius: 20px;
-          cursor: pointer;
-          z-index: 1000;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .game-button:hover {
-          background: #0056b3;
-          transform: translateY(-2px);
-          box-shadow: 0 6px 8px rgba(0,0,0,0.2);
-        }
-
-        /* Стили игры (изначально скрыты) */
-        .game-container {
-          display: none;
-          width: 100%;
-          align-items: center;
-          flex-direction: column;
-        }
-
-        .score-board {
-          font-size: 20px;
-          margin-bottom: 10px;
-          color: #fff;
-        }
-
-        #gameCanvas {
-          border: 2px solid #ccc;
-          border-radius: 8px;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-
-        /* Модальное окно */
-        .modal-background {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background: rgba(0,0,0,0.5);
-          display: none;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-
-        .modal-content {
-          background: #fff;
-          border-radius: 8px;
-          width: 400px;
-          max-width: 90%;
-          padding: 20px;
-          box-shadow: 0 0 10px rgba(0,0,0,0.2);
-          text-align: center;
-        }
-
-        .modal-content h2 {
-          margin-bottom: 15px;
-        }
-
-        .modal-content .question-text {
-          font-size: 16px;
-          margin-bottom: 15px;
-          min-height: 50px;
-        }
-
-        .modal-content input[type="text"] {
-          width: 80%;
-          padding: 8px;
-          font-size: 14px;
-          margin-bottom: 10px;
-        }
-
-        .modal-content .buttons {
-          display: flex;
-          gap: 10px;
-          justify-content: center;
-          margin-top: 10px;
-        }
-
-        .modal-content button {
-          cursor: pointer;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
-          background: #007bff;
-          color: #fff;
-          font-size: 14px;
-          transition: background-color 0.2s;
-        }
-
-        .modal-content button:hover {
-          background: #0056b3;
-        }
-
-        .modal-content .result-message {
-          margin-top: 10px;
-          min-height: 20px;
-          font-size: 14px;
-        }
-        .modal-verbs-game {
-            width: 90%;
-            max-width: 600px;
-            padding: 20px;
-        }
-
-        .question-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .drop-zone {
-            display: inline-block;
-            width: 80px;
-            height: 30px;
-            border: 2px dashed #007bff;
-            border-radius: 5px;
-            margin: 0 5px;
-            vertical-align: middle;
-        }
-
-        .answers-container {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .answer-option {
-            background: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: move;
-            user-select: none;
-        }
-
-        .correct {
-            background: #28a745 !important;
-        }
-
-        .wrong {
-            background: #dc3545 !important;
-        }
-
-        .feedback {
-            margin-top: 10px;
-            font-weight: bold;
-            min-height: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Three-in-One Game</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0; font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; overflow: hidden;
+    }
+    .menu-container, .game-container {
+      text-align: center; padding: 20px;
+      max-width: 600px; width: 100%;
+    }
+    .game-title { font-size: 24px; color: #fff; margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .game-button {
+      background: #007bff; color: #fff; border: none;
+      padding: 15px 30px; margin: 10px; border-radius: 25px;
+      font-size: 18px; cursor: pointer; transition: .3s;
+      width: 80%; max-width: 300px;
+    }
+    .game-button:hover { background: #0056b3; transform: translateY(-2px); }
+    .exit-button {
+      position: fixed; bottom: 20px; right: 20px;
+      background: #dc3545; color: #fff;
+      padding: 10px 20px; border-radius: 20px;
+      cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .score-board {
+      display: flex; gap: 15px;
+      font-size: 20px; color: #fff; margin-bottom: 10px;
+    }
+    canvas { border: 2px solid #ccc; border-radius: 8px; }
+    /* Touch controls for snake */
+    .touch-controls {
+      position: fixed; bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 10px; z-index: 1001;
+    }
+    .touch-controls button {
+      width: 50px; height: 50px; font-size: 24px;
+      border-radius: 8px; opacity: 0.6; border: none;
+    }
+    .touch-controls button:active { opacity: 1; }
+    /* Modal styling */
+    .modal-background {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: none; align-items: center;
+      justify-content: center; z-index: 1000;
+    }
+    .modal-content {
+      background: #fff; border-radius: 8px;
+      width: 400px; max-width: 90%; padding: 20px;
+      text-align: center; box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .modal-content .question-text {
+      font-size: 16px; margin-bottom: 15px;
+    }
+    .modal-content input, .modal-content button {
+      font-size: 14px; padding: 8px; margin: 5px;
+    }
+    .modal-content button { border: none; border-radius: 4px; background: #007bff; color: #fff; }
+    .modal-content button:hover { background: #0056b3; }
+    .feedback { margin-top: 10px; min-height: 20px; font-weight: bold; }
+    .correct { background: #28a745 !important; }
+    .wrong { background: #dc3545 !important; }
+    .drop-zone { display: inline-block; width: 80px; height: 30px;
+      border: 2px dashed #007bff; border-radius: 5px; vertical-align: middle;
+      margin: 0 5px;
+    }
+    .answers-container { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .answer-option {
+      background: #007bff; color: #fff;
+      padding: 10px 20px; border-radius: 20px;
+      cursor: move; user-select: none;
+    }
+  </style>
 </head>
 <body>
-<!-- Меню выбора игры -->
-<div class="menu-container" id="menuContainer">
+  <!-- Меню выбора -->
+  <div class="menu-container" id="menuContainer">
     <h1 class="game-title">Выберите задание</h1>
     <button class="game-button" onclick="startGame('snake')">🐍 Грамматическая Змейка</button>
     <button class="game-button" onclick="startGame('modal')">🃏 Модальные глаголы</button>
-</div>
+  </div>
 
-<!-- Добавляем кнопку выхода в игровой контейнер -->
-<div class="game-container" id="gameContainer">
-    <div class="score-board" id="scoreBoard">Score: 0</div>
-    <div class="modal-verbs-game" id="modalVerbsGame"></div>
+  <!-- Игровой контейнер -->
+  <div class="game-container" id="gameContainer" style="display:none;">
+    <div class="score-board">
+      <span id="scoreBoard">Score: 0</span> |
+      <span id="bestScore">Best: 0</span>
+    </div>
     <canvas id="gameCanvas" width="800" height="500"></canvas>
     <div class="exit-button" onclick="showMenu()">Выйти в меню</div>
-</div>
-
-
-<!-- Модальное окно для вопросов -->
-<div class="modal-background" id="modalBg">
-    <div class="modal-content">
-        <h2>Answer the question</h2>
-        <div class="question-text" id="questionText"></div>
-        <input type="text" id="userAnswer" placeholder="Ваш ответ">
-        <div class="result-message" id="resultMessage"></div>
-        <div class="buttons">
-            <button id="checkBtn">Check</button>
-            <button id="closeBtn">Close</button>
-        </div>
+    <div id="touchControls" class="touch-controls">
+      <button data-dir="up">↑</button>
+      <button data-dir="left">←</button>
+      <button data-dir="down">↓</button>
+      <button data-dir="right">→</button>
     </div>
-</div>
+  </div>
+
+  <!-- Модальное окно -->
+  <div class="modal-background" id="modalBg">
+    <div class="modal-content">
+      <h2>Answer the question</h2>
+      <div class="question-text" id="questionText"></div>
+      <input type="text" id="userAnswer" placeholder="Ваш ответ">
+      <div class="feedback" id="resultMessage"></div>
+      <div>
+        <button id="checkBtn">Check</button>
+        <button id="closeBtn">Close</button>
+      </div>
+    </div>
+  </div>
 
 <script>
-    // Данные для игры с модальными глаголами
-    const modalVerbsData = [
-        {
-            question: "______ you see anything in the dark room?",
-            correct: "can",
-            options: ["can", "may"]
-        },
-        {
-            question: "Kate ______ speak English.",
-            correct: "can",
-            options: ["can", "may"]
-        },
-    ];
+  // --- Common vars ---
+  let currentGame = null;
+  let score = 0, bestScore = 0;
+  const menuContainer = document.getElementById('menuContainer');
+  const gameContainer = document.getElementById('gameContainer');
+  const scoreBoard = document.getElementById('scoreBoard');
+  const bestBoard  = document.getElementById('bestScore');
+  const canvas     = document.getElementById('gameCanvas');
+  const ctx        = canvas.getContext('2d');
+  const modalBg    = document.getElementById('modalBg');
+  const qText      = document.getElementById('questionText');
+  const uAnswer    = document.getElementById('userAnswer');
+  const resMsg     = document.getElementById('resultMessage');
+  const checkBtn   = document.getElementById('checkBtn');
+  const closeBtn   = document.getElementById('closeBtn');
 
-    let currentQuestionIndex = 0;
-    let score = 0;
+  // --- Modal Verbs Game Data & Shuffle ---
+  let modalVerbsData = [
+    {question: "______ you see anything in the dark room?", correct: "can", options: ["can","may"]},
+    {question: "Kate ______ speak English.", correct: "can", options: ["can","may"]},
+    // ... можно добавить новые
+  ];
+  modalVerbsData.sort(() => Math.random() - 0.5);
+  let currentQuestionIndex = 0;
 
-    function initializeModalGame() {
-            const gameContainer = document.getElementById('modalVerbsGame');
-            gameContainer.innerHTML = '';
-
-            if(currentQuestionIndex >= modalVerbsData.length) {
-                endModalGame();
-                return;
-            }
-
-            const questionData = modalVerbsData[currentQuestionIndex];
-            const questionElement = document.createElement('div');
-            questionElement.className = 'question-container';
-
-            // Создаем вопрос с пропуском
-            const questionParts = questionData.question.split('______');
-            questionElement.innerHTML = `
-                <div class="question-text">
-                    ${questionParts[0]}
-                    <div class="drop-zone"
-                        ondrop="dropHandler(event)"
-                        ondragover="allowDrop(event)"
-                        data-correct="${questionData.correct.toLowerCase()}">
-                    </div>
-                    ${questionParts[1]}
-                </div>
-                <div class="answers-container">
-                    ${questionData.options.map(opt => `
-                        <div class="answer-option"
-                            draggable="true"
-                            ondragstart="dragHandler(event)"
-                            data-value="${opt.toLowerCase()}">
-                            ${opt}
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="feedback" id="feedback"></div>
-            `;
-
-            gameContainer.appendChild(questionElement);
-        }
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-        }
-
-        function dragHandler(ev) {
-            const value = ev.target.getAttribute('data-value');
-            ev.dataTransfer.setData("text", value);
-        }
-
-        function dropHandler(ev) {
-            ev.preventDefault();
-            const data = ev.dataTransfer.getData("text");
-            const dropZone = ev.target.closest('.drop-zone');
-
-            if (!dropZone || dropZone.children.length > 0) return;
-
-            const correctAnswer = dropZone.getAttribute('data-correct');
-            const userAnswer = data.toLowerCase();
-
-            // Создаем элемент для отображения ответа
-            const answerDisplay = document.createElement('div');
-            answerDisplay.textContent = data;
-            answerDisplay.className = `answer-option ${userAnswer === correctAnswer ? 'correct' : 'wrong'}`;
-
-            dropZone.appendChild(answerDisplay);
-            dropZone.style.borderStyle = 'solid';
-
-            // Проверяем ответ
-            if(userAnswer === correctAnswer) {
-                score++;
-                document.getElementById('scoreBoard').textContent = `Score: ${score}`;
-                document.getElementById('feedback').innerHTML = '✅ Правильно! +1 балл';
-                document.getElementById('feedback').style.color = '#28a745';
-
-                setTimeout(() => {
-                    currentQuestionIndex++;
-                    initializeModalGame();
-                }, 1500);
-            } else {
-                document.getElementById('feedback').innerHTML = '❌ Неправильно! Попробуйте ещё';
-                document.getElementById('feedback').style.color = '#dc3545';
-
-                // Автоматическая очистка через 1 секунду
-                setTimeout(() => {
-                    dropZone.innerHTML = '';
-                    dropZone.style.borderStyle = 'dashed';
-                }, 1000);
-            }
-        }
-
-        function endModalGame() {
-            const resultData = { game: 'modal', score: score };
-            if(typeof Telegram !== 'undefined' && Telegram.WebApp) {
-                Telegram.WebApp.sendData(JSON.stringify(resultData));
-            }
-
-            document.getElementById('modalVerbsGame').innerHTML = `
-                <div class="question-container">
-                    <h2>Игра завершена!</h2>
-                    <p>Вы набрали ${score} баллов из ${modalVerbsData.length}</p>
-                </div>
-            `;
-        }
-
-    // Обновляем функцию startGame
-    function startGame(gameType) {
-        currentGame = gameType;
-        menuContainer.style.display = 'none';
-        gameContainer.style.display = 'flex';
-
-        if(gameType === 'snake') {
-            initializeSnakeGame();
-        } else if(gameType === 'modal') {
-            score = 0;
-            currentQuestionIndex = 0;
-            document.getElementById('scoreBoard').textContent = 'Score: 0';
-            initializeModalGame();
-        }
+  // --- Helpers ---
+  function updateScoreDisplay(){
+    scoreBoard.textContent = `Score: ${score}`;
+    bestBoard.textContent  = `Best: ${bestScore}`;
+  }
+  function showMenu(){
+    if(confirm('Выйти в меню?')){
+      clearState();
+      menuContainer.style.display = 'block';
+      gameContainer.style.display = 'none';
     }
+  }
+  function clearState(){
+    score = 0; sessionStorage.removeItem('currentScore');
+    updateScoreDisplay();
+    if(currentGame==='snake') clearInterval(snakeInterval);
+    currentQuestionIndex = 0;
+    document.getElementById('modalVerbsGame')?.remove();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
 
-    // Обновляем функцию showMenu
-    function showMenu() {
-        if(confirm('Вы уверены, что хотите выйти в меню? Весь прогресс будет потерян!')) {
-            menuContainer.style.display = 'block';
-            gameContainer.style.display = 'none';
-            if(currentGame === 'snake' && snakeGameInterval) {
-                clearInterval(snakeGameInterval);
-            }
-            // Сбрасываем состояние игр
-            score = 0;
-            currentQuestionIndex = 0;
-        }
+  // --- Start Game ---
+  function startGame(type){
+    clearState();
+    currentGame = type;
+    menuContainer.style.display = 'none';
+    gameContainer.style.display = 'flex';
+    bestScore = parseInt(localStorage.getItem('bestScore'))||0;
+    updateScoreDisplay();
+    if(type==='snake') initSnake();
+    else if(type==='modal') initModal();
+  }
+
+  // -----------------------
+  //  MODAL VERBS FUNCTIONS
+  // -----------------------
+  function initModal(){
+    renderModalQuestion();
+    checkBtn.onclick = checkModalAnswer;
+    closeBtn.onclick = ()=>{ modalBg.style.display='none'; };
+  }
+  function renderModalQuestion(){
+    if(currentQuestionIndex>=modalVerbsData.length){
+      endModalGame(); return;
     }
-
-
-
-    // Управление меню и игрой
-    let currentGame = null;
-    const menuContainer = document.getElementById('menuContainer');
-    const gameContainer = document.getElementById('gameContainer');
-    let snakeGameInterval;
-
-    function startGame(gameType) {
-      currentGame = gameType;
-      menuContainer.style.display = 'none';
-      gameContainer.style.display = 'flex';
-
-      if(gameType === 'snake') {
-        initializeSnakeGame();
-    } else if(gameType === 'modal') {
-        initializeModalGame();
+    const data = modalVerbsData[currentQuestionIndex];
+    qText.innerHTML = data.question.replace('______', '<span class="drop-zone" data-correct="'+data.correct+'"></span>');
+    // render options
+    let opts = '';
+    data.options.forEach(opt=>{
+      opts+=`<div class="answer-option" draggable="true" data-value="${opt.toLowerCase()}">${opt}</div>`;
+    });
+    if(!document.getElementById('answersWrap')){
+      const wrap = document.createElement('div');
+      wrap.id='answersWrap'; wrap.className='answers-container';
+      modalBg.querySelector('.modal-content').appendChild(wrap);
+    }
+    const wrap = document.getElementById('answersWrap');
+    wrap.innerHTML = opts;
+    // drag/drop handlers
+    wrap.querySelectorAll('.answer-option').forEach(el=>{
+      el.ondragstart = e=> e.dataTransfer.setData('text', el.dataset.value);
+    });
+    document.querySelector('.drop-zone').ondragover = e=>e.preventDefault();
+    document.querySelector('.drop-zone').ondrop = e=>{
+      e.preventDefault();
+      const val = e.dataTransfer.getData('text'),
+            zone = e.target;
+      if(zone.children.length)return;
+      const div = document.createElement('div');
+      div.textContent = val;
+      div.className = 'answer-option '+(val===zone.dataset.correct?'correct':'wrong');
+      zone.appendChild(div);
+    };
+    modalBg.style.display='flex';
+  }
+  function checkModalAnswer(){
+    const zone = document.querySelector('.drop-zone');
+    if(!zone || !zone.firstChild){
+      resMsg.textContent = 'Перетащите ответ!'; resMsg.style.color='orange';
+      return;
+    }
+    const ok = zone.dataset.correct;
+    const got= zone.firstChild.textContent;
+    if(got===ok){
+      score++; resMsg.textContent='✅ Правильно!'; resMsg.style.color='green';
+      sessionStorage.setItem('currentScore', score);
+      zone.style.border='solid';
+      setTimeout(()=>{
+        resMsg.textContent=''; modalBg.style.display='none';
+        currentQuestionIndex++; renderModalQuestion();
+      }, 1000);
     } else {
-        alert('Эта игра в разработке!');
-        showMenu();
+      resMsg.textContent=`❌ Правильно: ${ok}`; resMsg.style.color='red';
     }
-    }
+    updateScoreDisplay();
+  }
+  function endModalGame(){
+    bestScore = Math.max(bestScore, score);
+    localStorage.setItem('bestScore', bestScore);
+    const resultData = { game: 'modal', score: bestScore };
+    if(window.Telegram?.WebApp) Telegram.WebApp.sendData(JSON.stringify(resultData));
+    qText.textContent = `Игра окончена! Вы набрали ${score}/${modalVerbsData.length}.`;
+    resMsg.textContent='';
+    document.getElementById('answersWrap').remove();
+    modalBg.style.display='flex';
+  }
 
-    function showMenu() {
-      if(confirm('Вы уверены, что хотите выйти в меню? Весь прогресс будет потерян!')) {
-        menuContainer.style.display = 'block';
-        gameContainer.style.display = 'none';
-        if(snakeGameInterval) clearInterval(snakeGameInterval);
-        // Сбрасываем состояние игры
-        gameOver = false;
-        score = 0;
-        snake = [
-          {x: 5, y: 5},
-          {x: 4, y: 5},
-          {x: 3, y: 5}
-        ];
-        tasks.forEach(task => task.done = false);
-        scoreBoard.textContent = 'Score: 0';
-      }
-    }
-// Модифицируем функцию closeModal
-    function closeModal() {
-      modalBg.style.display = 'none';
-      currentTaskIndex = null;
-      gamePaused = false; // Возобновляем игру при закрытии модального окна
-    }
-    // Код змейки
-    function initializeSnakeGame() {
-      const canvas = document.getElementById('gameCanvas');
-      const ctx = canvas.getContext('2d');
-      const internalWidth = 800, internalHeight = 500;
-      canvas.width = internalWidth;
-      canvas.height = internalHeight;
+  // -----------------------
+  //     SNAKE FUNCTIONS
+  // -----------------------
+  let snakeInterval, direction={x:1,y:0}, nextDirection=direction;
 
-      // Функция для адаптивного масштабирования canvas
-      function resizeCanvas() {
-        const availableWidth = window.innerWidth - 40;
-        const availableHeight = window.innerHeight - 150;
-        const aspectRatio = internalWidth / internalHeight;
-        let newWidth = availableWidth;
-        let newHeight = newWidth / aspectRatio;
-        if (newHeight > availableHeight) {
-          newHeight = availableHeight;
-          newWidth = newHeight * aspectRatio;
-        }
-        canvas.style.width = newWidth + 'px';
-        canvas.style.height = newHeight + 'px';
-      }
+  function initSnake(){
+    // randomize tasks
+    const cellSize=20, W=canvas.width, H=canvas.height;
+    const gridW=W/cellSize|0, gridH=H/cellSize|0;
+    const tasksData = [
+      {q:"She ___ (to go) to school every day.", a:"goes"},
+      {q:"They ___ (to eat) dinner at 7 PM yesterday.", a:"ate"},
+      {q:"I ___ (to be) very happy last week.", a:"was"},
+      {q:"He ___ (to work) in the garden right now.", a:"is working"},
+      {q:"We ___ (to see) that movie already.", a:"have seen"}
+    ];
+    const tasks = tasksData.map(t=>({
+      question:t.q, correct:t.a,
+      x: Math.floor(Math.random()*(gridW-2))+1,
+      y: Math.floor(Math.random()*(gridH-2))+1,
+      done:false
+    }));
 
-      window.addEventListener('resize', resizeCanvas);
-      resizeCanvas();
+    let snake=[{x:5,y:5},{x:4,y:5},{x:3,y:5}];
+    let paused=false, over=false;
+    updateScoreDisplay();
 
-      // Элементы страницы
-      const scoreBoard = document.getElementById('scoreBoard');
-      const modalBg = document.getElementById('modalBg');
-      const questionText = document.getElementById('questionText');
-      const userAnswer = document.getElementById('userAnswer');
-      const resultMessage = document.getElementById('resultMessage');
-      const checkBtn = document.getElementById('checkBtn');
-      const closeBtn = document.getElementById('closeBtn');
-
-      // Настройки игры
-      const cellSize = 20;
-      let gameSpeed = 150;
-      let snake = [
-        {x: 5, y: 5},
-        {x: 4, y: 5},
-        {x: 3, y: 5}
-      ];
-      let direction = {x: 1, y: 0};
-      let nextDirection = direction;
-      let score = 0;
-      let gamePaused = false;
-      let gameOver = false;
-
-      // Задания
-      const tasksData = [
-        {question: "She ___ (to go) to school every day.", correct: "goes", percX: 20, percY: 30},
-        {question: "They ___ (to eat) dinner at 7 PM yesterday.", correct: "ate", percX: 70, percY: 50},
-        {question: "I ___ (to be) very happy last week.", correct: "was", percX: 40, percY: 80},
-        {question: "He ___ (to work) in the garden right now.", correct: "is working", percX: 85, percY: 20},
-        {question: "We ___ (to see) that movie already.", correct: "have seen", percX: 10, percY: 60}
-      ];
-      const tasks = tasksData.map(task => ({
-        question: task.question,
-        correct: task.correct,
-        x: Math.floor((task.percX / 100) * (internalWidth / cellSize)),
-        y: Math.floor((task.percY / 100) * (internalHeight / cellSize)),
-        done: false
-      }));
-      let currentTaskIndex = null;
-
-      // Функция отрисовки
-      function drawGame() {
-        let gradient = ctx.createLinearGradient(0, 0, internalWidth, internalHeight);
-        gradient.addColorStop(0, '#89f7fe');
-        gradient.addColorStop(1, '#66a6ff');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, internalWidth, internalHeight);
-
-        tasks.forEach(task => {
-          if (!task.done) {
-            ctx.fillStyle = 'red';
-            const centerX = task.x * cellSize + cellSize / 2;
-            const centerY = task.y * cellSize + cellSize / 2;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, cellSize / 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        });
-
-        snake.forEach((segment, index) => {
-          ctx.fillStyle = index === 0 ? 'green' : 'lime';
-          ctx.fillRect(segment.x * cellSize, segment.y * cellSize, cellSize, cellSize);
-        });
-      }
-
-      // Обработка управления
-      document.addEventListener('keydown', (e) => {
-        if (gamePaused) return;
-        switch (e.key) {
-          case "ArrowUp":
-            if (direction.y === 1) break;
-            nextDirection = {x: 0, y: -1};
-            break;
-          case "ArrowDown":
-            if (direction.y === -1) break;
-            nextDirection = {x: 0, y: 1};
-            break;
-          case "ArrowLeft":
-            if (direction.x === 1) break;
-            nextDirection = {x: -1, y: 0};
-            break;
-          case "ArrowRight":
-            if (direction.x === -1) break;
-            nextDirection = {x: 1, y: 0};
-            break;
+    // draw function
+    function draw(){
+      // фон
+      const grad = ctx.createLinearGradient(0,0,W,H);
+      grad.addColorStop(0,'#89f7fe'); grad.addColorStop(1,'#66a6ff');
+      ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+      // точки
+      tasks.forEach(t=>{
+        if(!t.done){
+          ctx.fillStyle='red';
+          ctx.beginPath();
+          ctx.arc(t.x*cellSize+cellSize/2, t.y*cellSize+cellSize/2, cellSize/2,0,2*Math.PI);
+          ctx.fill();
         }
       });
-
-      // Игровая логика
-      function checkTaskCollision(newHead) {
-        for (let i = 0; i < tasks.length; i++) {
-          const task = tasks[i];
-          if (!task.done && newHead.x === task.x && newHead.y === task.y) {
-            return i;
-          }
-        }
-        return -1;
-      }
-
-      function gameLoop() {
-        if (gamePaused || gameOver) return;
-        direction = nextDirection;
-        const head = snake[0];
-        const newHead = {x: head.x + direction.x, y: head.y + direction.y};
-
-        newHead.x = (newHead.x + (internalWidth / cellSize)) % (internalWidth / cellSize);
-        newHead.y = (newHead.y + (internalHeight / cellSize)) % (internalHeight / cellSize);
-
-        for (let i = 0; i < snake.length; i++) {
-          if (snake[i].x === newHead.x && snake[i].y === newHead.y) {
-            endGame();
-            return;
-          }
-        }
-
-        snake.unshift(newHead);
-        const taskIndex = checkTaskCollision(newHead);
-        if (taskIndex !== -1) {
-          gamePaused = true;
-          currentTaskIndex = taskIndex;
-          showQuestion(tasks[taskIndex].question);
-        } else {
-          snake.pop();
-        }
-        drawGame();
-      }
-
-      // Модальное окно
-      function showQuestion(question) {
-        questionText.textContent = question;
-        userAnswer.value = '';
-        resultMessage.textContent = '';
-        resultMessage.style.color = '#333';
-        modalBg.style.display = 'flex';
-      }
-
-      function closeModal() {
-        modalBg.style.display = 'none';
-        currentTaskIndex = null;
-        gamePaused = false;
-        if (gameOver) {
-          clearInterval(snakeGameInterval);
-        }
-      }
-
-      function checkAnswer() {
-        if (currentTaskIndex === null) return;
-        const task = tasks[currentTaskIndex];
-        const userAns = userAnswer.value.trim().toLowerCase();
-        const correctAns = task.correct.toLowerCase();
-        if (!userAns) {
-          resultMessage.textContent = 'Введите ответ!';
-          resultMessage.style.color = 'orange';
-          return;
-        }
-        if (userAns === correctAns) {
-          resultMessage.textContent = 'Правильно! +1 балл.';
-          resultMessage.style.color = 'green';
-          score++;
-          scoreBoard.textContent = 'Score: ' + score;
-          task.done = true;
-          setTimeout(() => {
-            closeModal();
-            if (tasks.every(t => t.done)) {
-              endGame();
-            }
-          }, 1000);
-        } else {
-          resultMessage.textContent = 'Неправильно. Правильный ответ: ' + task.correct;
-          resultMessage.style.color = 'red';
-        }
-      }
-
-      checkBtn.addEventListener('click', checkAnswer);
-      closeBtn.addEventListener('click', () => {
-        closeModal();
+      // змейка
+      snake.forEach((s,i)=>{
+        ctx.fillStyle = i===0?'green':'lime';
+        ctx.fillRect(s.x*cellSize, s.y*cellSize, cellSize, cellSize);
       });
+    }
 
-      // Завершение игры
-    function endGame() {
-      gameOver = true;
-      gamePaused = true;
-      clearInterval(snakeGameInterval);
-      questionText.textContent = "Все задания выполнены или игра окончена!";
-      userAnswer.style.display = 'none';
-      checkBtn.style.display = 'none';
-      resultMessage.textContent = 'Вы набрали ' + score + ' баллов!';
-      resultMessage.style.color = 'blue';
-      modalBg.style.display = 'flex';
-
-      const resultData = { game: currentGame, score: score };
-      if(typeof Telegram !== 'undefined' && Telegram.WebApp) {
-        Telegram.WebApp.sendData(JSON.stringify(resultData));
+    // управление клавишами
+    document.addEventListener('keydown', e=>{
+      if(paused) return;
+      const key=e.key;
+      if(key==='ArrowUp' && direction.y!==1)    nextDirection={x:0,y:-1};
+      if(key==='ArrowDown'&& direction.y!==-1) nextDirection={x:0,y:1};
+      if(key==='ArrowLeft'&& direction.x!==1)  nextDirection={x:-1,y:0};
+      if(key==='ArrowRight'&&direction.x!==-1) nextDirection={x:1,y:0};
+    });
+    // on-screen buttons
+    document.querySelectorAll('#touchControls button').forEach(btn=>{
+      btn.addEventListener('touchstart', e=>{
+        e.preventDefault();
+        const d=btn.dataset.dir;
+        if(d==='up'&&direction.y!==1) nextDirection={x:0,y:-1};
+        if(d==='down'&&direction.y!==-1) nextDirection={x:0,y:1};
+        if(d==='left'&&direction.x!==1) nextDirection={x:-1,y:0};
+        if(d==='right'&&direction.x!==-1) nextDirection={x:1,y:0};
+      });
+    });
+    // swipe
+    let sx,sy;
+    canvas.addEventListener('touchstart', e=>{
+      sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY;
+    });
+    canvas.addEventListener('touchend', e=>{
+      const dx=e.changedTouches[0].clientX-sx,
+            dy=e.changedTouches[0].clientY-sy;
+      if(Math.abs(dx)>30||Math.abs(dy)>30){
+        if(Math.abs(dx)>Math.abs(dy)){
+          if(dx>0&&direction.x!==-1) nextDirection={x:1,y:0};
+          else if(dx<0&&direction.x!==1) nextDirection={x:-1,y:0};
+        } else {
+          if(dy>0&&direction.y!==-1) nextDirection={x:0,y:1};
+          else if(dy<0&&direction.y!==1) nextDirection={x:0,y:-1};
+        }
       }
+    });
+
+    function checkCollision(head){
+      return tasks.findIndex(t=>!t.done && t.x===head.x && t.y===head.y);
+    }
+    function gameLoop(){
+      if(paused||over) return;
+      direction = nextDirection;
+      const head = {x:snake[0].x+direction.x, y:snake[0].y+direction.y};
+      head.x = (head.x+gridW)%gridW;
+      head.y = (head.y+gridH)%gridH;
+      // самопересечение
+      if(snake.some(s=>s.x===head.x && s.y===head.y)){
+        endSnake(); return;
+      }
+      snake.unshift(head);
+      const idx = checkCollision(head);
+      if(idx>=0){
+        paused = true;
+        // показываем вопрос
+        qText.textContent = tasks[idx].question;
+        modalBg.style.display='flex';
+        checkBtn.onclick = ()=>{
+          const ans = uAnswer.value.trim().toLowerCase();
+          if(!ans){ resMsg.textContent='Введите ответ!'; resMsg.style.color='orange'; return; }
+          if(ans===tasks[idx].correct.toLowerCase()){
+            resMsg.textContent='✅ Правильно!'; resMsg.style.color='green';
+            score++; updateScoreDisplay();
+            tasks[idx].done = true;
+            sessionStorage.setItem('currentScore', score);
+            setTimeout(()=>{
+              uAnswer.value=''; resMsg.textContent=''; modalBg.style.display='none';
+              paused = false;
+              if(tasks.every(t=>t.done)) endSnake();
+            }, 1000);
+          } else {
+            resMsg.textContent='❌ Неправильно! Правильный: '+tasks[idx].correct;
+            resMsg.style.color='red';
+          }
+        };
+      } else {
+        snake.pop();
+      }
+      draw();
     }
 
-      // Запуск игры
-      snakeGameInterval = setInterval(gameLoop, gameSpeed);
+    function endSnake(){
+      over = true; paused = true; clearInterval(snakeInterval);
+      bestScore = Math.max(bestScore, score);
+      localStorage.setItem('bestScore', bestScore);
+      resMsg.textContent = 'Вы набрали '+score+' очков!';
+      resMsg.style.color='blue';
+      modalBg.style.display='flex';
+      const resultData = { game:'snake', score: bestScore };
+      if(window.Telegram?.WebApp) Telegram.WebApp.sendData(JSON.stringify(resultData));
     }
+
+    snakeInterval = setInterval(gameLoop, 150);
+  }
 </script>
 </body>
 </html>
