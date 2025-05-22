@@ -29,9 +29,16 @@ def register_user(user_id, username):
         )
         conn.commit()
 
-def update_score(user_id, new_score):
-    cursor.execute("UPDATE users SET score = ? WHERE id = ?", (new_score, user_id))
+
+def update_score(user_id, additional_points):
+    # получаем старый счет
+    cursor.execute("SELECT score FROM users WHERE id = ?", (user_id,))
+    row = cursor.fetchone()
+    old = row[0] if row else 0
+    new = old + additional_points
+    cursor.execute("UPDATE users SET score = ? WHERE id = ?", (new, user_id))
     conn.commit()
+
 
 def get_ratings():
     cursor.execute(
@@ -94,6 +101,10 @@ def handle_web_app_data(message):
 
     # Сохраняем именно лучший рекорд
     update_score(user_id, score)
+    session_points = result["score"]
+    game = result["game"]
+   # Накопим к общей сумме
+    update_score(user_id, session_points)
 
     if game == "english":
         text = f"Вы завершили игру «Английский». Ваш лучший рекорд – {score} очков!"
