@@ -5,7 +5,7 @@
   <title>Three-in-One Game</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Базовые стили */
+        /* Базовые стили */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -200,6 +200,8 @@
         font-size: 12px;
       }
     }
+
+
   </style>
 </head>
 <body>
@@ -217,7 +219,8 @@
       <span id="scoreBoard">Score: 0</span> |
       <span id="bestScore">Best: 0</span>
     </div>
-    <div class="exit-button" onclick="showMenu()">× Меню</div>
+    <!-- Крестик теперь вызывает exitGame -->
+    <div class="exit-button" onclick="exitGame()">× Меню</div>
     <div id="touchControls" class="touch-controls">
       <button data-dir="up">↑</button>
       <button data-dir="left">←</button>
@@ -226,7 +229,7 @@
     </div>
   </div>
 
-  <!-- Модальное окно для вопросов -->
+  <!-- Модалка -->
   <div class="modal-background" id="modalBg">
     <div class="modal-content">
       <h2>Answer the question</h2>
@@ -240,16 +243,14 @@
   </div>
 
   <script>
-    // === Общие переменные ===
     let currentGame = null,
-        score = 0,
-        bestScore = 0,
+        score       = 0,
+        bestScore   = 0,
         snakeInterval,
-        direction = {x:1,y:0},
+        direction   = {x:1,y:0},
         nextDirection = {x:1,y:0},
         currentQuestionIndex = 0;
 
-    // Элементы DOM
     const menuContainer = document.getElementById('menuContainer'),
           gameArea      = document.getElementById('gameArea'),
           scoreBoard    = document.getElementById('scoreBoard'),
@@ -269,11 +270,10 @@
     let modalVerbsData = [
       {question: "______ you see anything in the dark room?", correct: "can", options: ["can","may"]},
       {question: "Kate ______ speak English.",        correct: "can", options: ["can","may"]},
-      // … можно добавить
+      // …
     ];
     modalVerbsData.sort(() => Math.random() - 0.5);
 
-    // === Вспомогательные функции ===
     function updateScoreDisplay() {
       scoreBoard.textContent = `Score: ${score}`;
       bestBoard.textContent  = `Best: ${bestScore}`;
@@ -287,7 +287,6 @@
       ctx.clearRect(0,0,canvas.width,canvas.height);
       clearInterval(snakeInterval);
       modalBg.style.display = 'none';
-      // сброс модалки
       uAnswer.value = '';
       resMsg.textContent = '';
       answersWrap.innerHTML = '';
@@ -297,6 +296,17 @@
       menuContainer.style.display = 'block';
       gameArea.classList.remove('active');
     }
+
+    // НОВАЯ функция выхода — шлёт текущие очки и возвращает в меню
+    function exitGame() {
+      Telegram.WebApp.sendData(JSON.stringify({
+        game: currentGame,
+        score: score,
+        stage: 'exit'
+      }));
+      showMenu();
+    }
+
     function startGame(type) {
       clearState();
       currentGame = type;
@@ -308,7 +318,7 @@
       else if (type === 'modal') initModal();
     }
 
-    // === ИГРА: МОДАЛЬНЫЕ ГЛАГОЛЫ ===
+       // === ИГРА: МОДАЛЬНЫЕ ГЛАГОЛЫ ===
     function initModal() {
       // прячем ввод и кнопку Check
       uAnswer.style.display = 'none';
@@ -363,6 +373,7 @@
       resMsg.textContent = '';
       closeBtn.textContent = 'Закрыть';
       modalBg.style.display = 'flex';
+      Telegram.WebApp.sendData(JSON.stringify({game: currentGame, score: score}));
     }
 
     // === ИГРА: ЗМЕЙКА ===
@@ -519,6 +530,7 @@
       closeBtn.textContent = 'Закрыть';
       closeBtn.onclick = () => modalBg.style.display = 'none';
       modalBg.style.display = 'flex';
+      Telegram.WebApp.sendData(JSON.stringify({game: currentGame, score: score}));
     }
   </script>
 </body>
