@@ -42,13 +42,14 @@
     .touch-controls {
       position: fixed; bottom: 20px; left: 50%;
       transform: translateX(-50%);
-      display: flex; gap: 10px; z-index: 1001;
+      display: flex; gap: 10px; z-index: 1001;   background: rgba(255,255,255,0.5); /* добавили полупрозрачный фон */
+      padding: 5px; border-radius: 8px;
     }
     .touch-controls button {
       width: 50px; height: 50px; font-size: 24px;
-      border-radius: 8px; opacity: 0.6; border: none;
+      border-radius: 8px; opacity: 0.8; border: none;
     }
-    .touch-controls button:active { opacity: 1; }
+    .touch-controls button:active { opacity: 1; transform: scale(0.95); }
     /* Modal styling */
     .modal-background {
       position: fixed; top: 0; left: 0;
